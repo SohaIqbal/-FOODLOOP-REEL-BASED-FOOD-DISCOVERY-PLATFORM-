@@ -1,5 +1,5 @@
 import express from 'express';
-import { createFood, getAllFoods, likeFood , SaveFood, SavedVideos} from '../controllers/food.controller.js';
+import { createFood, getAllFoods, likeFood , SaveFood, SavedVideos, CommentOnFood, GetComments} from '../controllers/food.controller.js';
 import { authenticateFoodPartner ,authenticateUser, authenticateany} from '../middleware/auth.middleware.js';
 import multer from 'multer';
 
@@ -18,6 +18,8 @@ router.get('/createfood', authenticateany, getAllFoods);
 router.post('/like', authenticateUser, likeFood);
 router.post('/save', authenticateUser, SaveFood);
 router.get('/saved-videos' , authenticateUser,SavedVideos )
+router.post('/comment', authenticateUser,CommentOnFood)
+router.get('/comment/:foodId', authenticateany, GetComments)
 
 
 export default router;

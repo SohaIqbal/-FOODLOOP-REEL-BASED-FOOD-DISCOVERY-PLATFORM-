@@ -8,7 +8,7 @@ const Home = () => {
   return (
     <div className="home">
       <header className="header">
-        <div className="logo">FoodReview</div>
+        <div className="logo">FoodLoop</div>
         <nav className="nav">
           <Link to="/">Home</Link>
           <Link to="/login/user">Login</Link>
@@ -23,8 +23,8 @@ const Home = () => {
 
       <section className="hero">
         <div className="hero-content">
-          <h1>Welcome to FoodReview</h1>
-          <p>Discover, review, and share amazing food experiences from our trusted partners.</p>
+          <h1>Welcome to FoodLoop</h1>
+          <p>Discover amazing food experiences from our trusted partners.</p>
           <div className="cta-buttons">
             <Link to="/login/user" className="btn primary">Get Started</Link>
             <Link to="/login/foodpartner" className="btn secondary">Join as Partner</Link>

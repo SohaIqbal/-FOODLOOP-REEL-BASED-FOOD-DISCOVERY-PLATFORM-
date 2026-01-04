@@ -8,6 +8,7 @@ const foodSchema = new mongoose.Schema({
     foodpartner:{ type: mongoose.Schema.Types.ObjectId, ref: 'FoodPartner' , required: true},
     likecount: { type: Number, default: 0 },
     savecount: { type: Number, default: 0 },
+    commentcount:{type: Number, default: 0}
 
 })
 

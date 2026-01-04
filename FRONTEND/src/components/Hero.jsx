@@ -8,10 +8,22 @@ import { FaUserAlt } from "react-icons/fa";
 
 const Hero = () => {
   const navigate = useNavigate();
+
   const [foods, setFoods] = useState([]);
+
+  const [activeFoodId, setActiveFoodId] = useState(null);
+
+
+
+  const [showComments, setShowComments] = useState(false);
+const [newComment, setNewComment] = useState("");
+const [comments, setComments] = useState([]);
+
   // const[like, setLike]= useState(false);  
  
   const videoRefs = useRef([]);
+
+  
 
   useEffect(() => {
     const fetchFoods = async () => {
@@ -25,6 +37,47 @@ const Hero = () => {
     };
     fetchFoods();
   },[] );
+
+//   useEffect(() => {
+
+//   const fetchComments = async (activeFoodId) => {
+//     try {
+//       const res = await axios.get(
+//         `http://localhost:3000/api/food/comment/${activeFoodId}`,
+//         { withCredentials: true }
+//       );
+//       setComments(res.data.comments);
+
+//       console.log("Fetched comments:", res.data.comments);
+//     } catch (error) {
+//       console.error("Failed to fetch comments:", error);
+//     }
+//   };
+
+//   fetchComments();
+// }, [activeFoodId]);
+
+
+useEffect(() => {
+  console.log("Active Food ID changed:", activeFoodId);
+  if (!activeFoodId) return; // 🔑 prevent undefined call
+
+  const fetchComments = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:3000/api/food/comment/${activeFoodId}`,
+        { withCredentials: true }
+      );
+      setComments(res.data.comments);
+      console.log("Fetched comments:", res.data.comments);
+    } catch (error) {
+      console.error("Failed to fetch comments:", error);
+    }
+  };
+
+  fetchComments();
+}, [activeFoodId]);
+
 
 const handleLike = async (id) =>  {
   try {
@@ -79,9 +132,9 @@ const handleSave = async(id) => {
 
 
 
-const handleComment = (id) => {
-  console.log("Comment on food:", id);
-};
+// const handleComment = (id) => {
+//   console.log("Comment on food:", id);
+// };
 
 const Home = () => {
   navigate('/hero');
@@ -120,6 +173,62 @@ const Profile= () => {
       });
     };
   }, [foods]);
+
+const handleAddComment = async (id) => {
+  if (!newComment.trim()) return;
+
+  try {
+    const res = await axios.post(
+      'http://localhost:3000/api/food/comment',
+      {
+        foodId: id,        // make sure this exists
+        content: newComment,
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    setComments((prevComments) => [
+      ...prevComments,
+      {
+        user: 'You',
+        avatar: 'https://i.pravatar.cc/40',
+        text: newComment,}])
+
+
+            setFoods((prevFoods) =>
+      prevFoods.map((f) =>
+        f._id === id ? { ...f, commentcount: f.commentcount + 1 } : f
+      )
+    );
+       
+    setNewComment("");
+
+    console.log("Comment added:", res.data);
+
+
+       const response = await axios.get(
+        `http://localhost:3000/api/food/comment/${id}`,
+        { withCredentials: true }
+      );
+      setComments(response.data.comments);
+
+   
+
+
+
+
+  } catch (error) {
+    console.error(
+      "Error adding comment:",
+      error.response?.data || error.message
+    );
+  }
+};
+
+
+
 
   return (
     <div style={{
@@ -191,12 +300,182 @@ const Profile= () => {
 
   {/* Comment */}
   <div
-    onClick={() => handleComment(food._id)}
+    onClick={() => {
+      setActiveFoodId(food._id);
+     
+      setShowComments(true);
+    }}
     style={{ cursor: "pointer", textAlign: "center" }}
   >
     <FaRegCommentDots size={28} />
-    <div style={{ fontSize: "12px" }}>Comment</div>
+      <div style={{ fontSize: "12px", display: "flex", flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+     <p> Comments </p>
+      <div>{food.commentcount}</div>
+      </div>
   </div>
+
+ {showComments && (
+  <div
+    style={{
+      position: "fixed",
+      bottom: 0,
+      left: 0,
+      width: "100%",
+      height: "55%",
+      backgroundColor: "#000",
+      color: "white",
+      borderTopLeftRadius: "20px",
+      borderTopRightRadius: "20px",
+      zIndex: 1000,
+      display: "flex",
+      flexDirection: "column",
+    }}
+  >
+    {/* Header */}
+    <div
+      style={{
+        padding: "12px",
+        borderBottom: "1px solid #222",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <span style={{ fontWeight: "600" }}>Comments</span>
+      <span
+        onClick={() => setShowComments(false)}
+        style={{ cursor: "pointer", fontSize: "18px" }}
+      >
+        ✕
+      </span>
+    </div>
+
+    {/* Comments */}
+    <div
+      style={{
+        flex: 1,
+        overflowY: "auto",
+        padding: "12px",
+        width: "100%",
+        height: "30%",
+      }}
+    >
+      {comments.length === 0 ? (
+        <p style={{ color: "#777", textAlign: "center" }}>
+          Be the first to comment
+        </p>
+      ) : (
+        comments.map((c, index) => (
+          <div
+            key={index}
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginBottom: "14px",
+            }}
+          >
+            {/* Avatar */}
+            <img
+              src={c.avatar || "https://i.pravatar.cc/40"}
+              alt="user"
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+
+            {/* Comment */}
+            <div>
+              <span style={{ fontWeight: "600", fontSize: "13px" }}>
+                {c.user.fullname || 'Anonymous'}
+              </span>
+              <p style={{ margin: 0, fontSize: "20px", color: "white" }}>
+                {c.content}
+              </p>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+
+    {/* Input bar (STICKY like Insta) */}
+    <div
+      style={{
+        padding: "10px",
+        borderTop: "1px solid #222",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        backgroundColor: "#000",
+        width: "100%",
+      }}
+    >
+      {/* Your avatar */}
+      <img
+        src="https://i.pravatar.cc/40"
+        alt="me"
+        style={{
+          width: "34px",
+          height: "34px",
+          borderRadius: "50%",
+        }}
+      />
+
+      {/* Input */}
+     <input
+  type="text"
+  placeholder="Add a comment..."
+  value={newComment}
+  onChange={(e) => setNewComment(e.target.value)}
+  style={{
+    flex: 1,
+    backgroundColor: "#1a1a1a", // FORCE background
+    border: "1px solid #444",
+    borderRadius: "20px",
+    padding: "10px 14px",
+    color: "#fff",              // FORCE text color
+    caretColor: "#fff",         // FORCE cursor visibility
+    outline: "none",
+    fontSize: "14px",
+    width: "100%",
+  }}
+/>
+
+
+      {/* Post */}
+      <button
+        onClick={()=> handleAddComment(activeFoodId)
+
+        }
+        disabled={!newComment.trim()}
+        style={{
+          background: "transparent",
+          border: "none",
+          color: newComment.trim() ? "#0095f6" : "#555",
+          fontWeight: "700",
+          cursor: newComment.trim() ? "pointer" : "default",
+            width: '100px',
+        height: '40px',
+        }}
+      >
+        Post
+      </button>
+
+      {/* <button
+      style={{
+        width: '100px',
+        height: '30px',
+      }}
+      >
+        Post
+      </button> */}
+    </div>
+  </div>
+)}
+
+
 
   {/* Save */}
   <div

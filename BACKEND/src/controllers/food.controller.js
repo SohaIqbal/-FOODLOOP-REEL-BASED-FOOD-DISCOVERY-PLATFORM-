@@ -5,6 +5,7 @@ import likeModel from '../models/likemodel.js';
 import cloudinary from "../services/cloudinary.js";
 import SaveModel from '../models/savemodel.js';
 import { triggerAsyncId } from 'async_hooks';
+import commentModel from '../models/Commentmodel.js';
 export const createFood = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -215,3 +216,61 @@ export const SavedVideos = async (req, res) => {
 
 
 }
+
+export const CommentOnFood = async (req, res) => {
+
+  try {
+    
+    const userId = req.user._id;
+    const foodId =  req.body.foodId;
+
+    const food = await foodmodel.findById(foodId);
+
+    if(!food){
+      return res.status(404).json({ message: "Food not found" });
+    }
+    await commentModel.create({
+      user: userId,
+      food: foodId,
+      content: req.body.content
+    });
+    
+       await foodmodel.findByIdAndUpdate(
+        foodId,
+        { $inc: { commentcount: 1 } },
+        { new: true }
+      );
+    const totalComments = await commentModel.countDocuments({ food: foodId });
+
+    const updatedFood = await foodmodel.findByIdAndUpdate(
+      foodId,
+      { commentcount: totalComments },
+      { new: true }
+    );
+
+    res.status(201).json({ message: "Comment added successfully", food: updatedFood });
+      
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+    
+  }
+
+}
+
+
+export const GetComments = async (req, res) => {
+
+  try {
+    const {foodId} = req.params;
+    const comments = await commentModel.find({ food: foodId }).populate('user', 'fullname').sort({createdAt: -1});
+    res.status(200).json({ comments });
+
+
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+    
+  }}
